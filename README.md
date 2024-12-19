@@ -186,7 +186,7 @@ To run SHAD as a kiosk on a Raspberry Pi:
 
 4. **Dependencies**
 
-   Ensure `wtype` is installed. It's used to automatically press F5 after 30 seconds because Chromium sometimes requires a reload in kiosk mode for camera feeds to update smoothly.
+   Ensure `wtype` is installed. It's used to automatically press F5 after 30 seconds because Chromium sometimes requires a reload in kiosk mode after first startup, for camera feeds to update smoothly.
 
    - Install `wtype`:
 
