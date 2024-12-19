@@ -114,7 +114,7 @@ Essentially a weather station/clock with background camera feeds for any device 
 
 - **Switch via Keyboard**
 
-  In the Settings tab, press numeric keys `0`-`9` to switch between configurations.
+  Press keys `0`-`9` to switch between configurations.
 
 - **Switch via URL**
 
