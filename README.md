@@ -44,7 +44,7 @@ Essentially a weather station/clock with background camera feeds for any device 
 ### Prerequisites
 
 - An HTTP server (e.g., Apache, NGINX)
-- Any modern web browser
+- Any modern web browser on client terminal
 - Optional: Raspberry Pi 4 or similar ARM device for low-power setups
 - Optional: [Restreamer](https://datarhei.github.io/restreamer/) for camera feeds
 - Optional: `wtype` utility for kiosk mode
