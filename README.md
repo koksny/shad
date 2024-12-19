@@ -203,7 +203,7 @@ To run SHAD as a kiosk on a Raspberry Pi:
 
 ## Extras
 
-- **Using Xiaomi Bluetooth Thermometer**
+- **Using Xiaomi Bluetooth Thermometer (LYWSD03MMC)**
 
   If you're using the $4 Xiaomi Bluetooth thermometer:
 
