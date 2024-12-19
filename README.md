@@ -163,7 +163,7 @@ Essentially a weather station/clock with background camera feeds for any device 
 
 - **Customization**:
 
-  Set your location in the Settings tab.
+  Set your location in the Weather widget input field.
 
 ## Kiosk Mode
 
