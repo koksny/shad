@@ -18,6 +18,7 @@
   --text-secondary: rgba(255, 255, 255, 0.7);
   --font-family: 'Inter', sans-serif;
   --base-font-size: 16px;
+  --calendar-font-size: 5em;
 }
 
 /* Update the cats theme */
@@ -297,13 +298,16 @@ body {
 
 .setting-item input[type="text"],
 .setting-item input[type="number"],
-.setting-item select {
+.setting-item select,
+.setting-item textarea,
+.setting-item input[type="date"] {
   width: 100%;
   padding: 8px;
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 4px;
   color: var(--text-color);
+  box-sizing: border-box;
 }
 
 .settings-section {
@@ -431,6 +435,44 @@ body {
   margin-bottom: 10px;
 }
 
+.calendar-banner {
+    position: fixed;
+    bottom: -1000px; /* Ensure it's fully off-screen initially */
+    left: 0;
+    width: auto; /* Change to auto to fit content */
+    background: linear-gradient(to bottom, rgba(var(--accent-color-rgb, 0, 180, 216), 0.7), rgba(var(--accent-color-rgb, 0, 180, 216), 0.5));
+    color: var(--text-color);
+    padding: 10px 20px; /* Add some horizontal padding */
+    text-align: center;
+    font-size: var(--calendar-font-size);
+    z-index: 9999;
+    transition: bottom 0.5s ease-in-out;
+    overflow: visible;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    white-space: nowrap;
+    word-break: keep-all; /* Prevent breaking words */
+    font-family: var(--font-family);
+    font-weight: bold;
+    word-spacing: 0.2em;
+    border-radius: 10px;
+}
+
+.calendar-banner.visible {
+    bottom: 20px;
+}
+
+.calendar-banner.sliding {
+    animation: slideText 20s linear infinite;
+}
+
+@keyframes slideText {
+    0% { transform: translateX(100vw); } /* Start from the right edge */
+    100% { transform: translateX(-100%); } /* End off the left edge */
+}
+
 @media (max-width: 768px) {
   .settings-panel {
     width: 100%;
@@ -481,9 +523,14 @@ body {
 
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/streamedian@latest/dist/streamedian.min.js"></script>
 
-    <script>function loadConfig(configId) {
+    <script>function getColorRgb(cssVar) {
+  const color = getComputedStyle(document.documentElement).getPropertyValue(cssVar).trim();
+  const match = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+  return match ? `${match[1]}, ${match[2]}, ${match[3]}` : '';
+}
+document.documentElement.style.setProperty('--accent-color-rgb', getColorRgb('--accent-color'));
+function loadConfig(configId) {
   const urlParams = new URLSearchParams(window.location.search);
   const dashboardMode = urlParams.get('dashboard') ?? '1';
   window.location.href = `index.html?config=${configId}&dashboard=${dashboardMode}`;
@@ -536,35 +583,35 @@ async function updateWeather(lat, lon, cityName) {
       const date = new Date();
       date.setDate(date.getDate() + i);
       forecastDays += `
-        <div class="forecast-item">
-          <div>${date.toLocaleDateString('en-GB', {
+                <div class="forecast-item">
+                  <div>${date.toLocaleDateString('en-GB', {
         weekday: 'short'
       })}</div>
-          <div>${getWeatherIcon(data.daily.weathercode[i])}</div>
-          <div>${Math.round(data.daily.temperature_2m_max[i])}°</div>
-          <div>${Math.round(data.daily.temperature_2m_min[i])}°</div>
-        </div>
-      `;
+                  <div>${getWeatherIcon(data.daily.weathercode[i])}</div>
+                  <div>${Math.round(data.daily.temperature_2m_max[i])}°</div>
+                  <div>${Math.round(data.daily.temperature_2m_min[i])}°</div>
+                </div>
+              `;
     }
     weatherInfo.innerHTML = `
-      <div class="weather-icon">${getWeatherIcon(current.weathercode)}</div>
-      <div class="temperature">${Math.round(current.temperature)}°C</div>
-      <div class="last-update">Last updated: ${new Date().toLocaleTimeString('en-GB', {
+              <div class="weather-icon">${getWeatherIcon(current.weathercode)}</div>
+              <div class="temperature">${Math.round(current.temperature)}°C</div>
+              <div class="last-update">Last updated: ${new Date().toLocaleTimeString('en-GB', {
       hour12: false
     })}</div>
-      <div class="weather-details">
-        <div class="wind">Wind: ${Math.round(current.windspeed)} km/h</div>
-        <div class="gusts">Gusts: ${Math.round(data.hourly.windgusts_10m[currentHour])} km/h</div>
-        <div class="pressure">Pressure: ${Math.round(data.hourly.pressure_msl[currentHour])} hPa</div>
-        <div class="humidity">Humidity: ${data.hourly.relativehumidity_2m[currentHour]}%</div>
-      </div>
-      <div class="forecast">
-        <div class="forecast-title">Next Days:</div>
-        <div class="forecast-items">
-          ${forecastDays}
-        </div>
-      </div>
-    `;
+              <div class="weather-details">
+                <div class="wind">Wind: ${Math.round(current.windspeed)} km/h</div>
+                <div class="gusts">Gusts: ${Math.round(data.hourly.windgusts_10m[currentHour])} km/h</div>
+                <div class="pressure">Pressure: ${Math.round(data.hourly.pressure_msl[currentHour])} hPa</div>
+                <div class="humidity">Humidity: ${data.hourly.relativehumidity_2m[currentHour]}%</div>
+              </div>
+              <div class="forecast">
+                <div class="forecast-title">Next Days:</div>
+                <div class="forecast-items">
+                  ${forecastDays}
+                </div>
+              </div>
+            `;
   } catch (error) {
     console.error('Error updating weather:', error);
   }
@@ -644,12 +691,15 @@ class ConfigManager {
         columns: 1,
         rows: 1,
         numCameras: 1
-      }
+      },
+      calendarEvents: {},
+      calendarFontSize: 5
     };
     this._sensorPolling = {};
     this._latestWeatherLat = null;
     this._latestWeatherLon = null;
     this.loadConfig();
+    this.loadCalendarData();
     this.setupWeatherWidget();
     this.setupEventListeners();
     this.setupCameraGrid(1);
@@ -664,6 +714,8 @@ class ConfigManager {
         await updateWeather(lat, lon, city);
       }
     }, 15 * 60 * 1000);
+    this.calendarBanner = document.querySelector('.calendar-banner');
+    setInterval(() => this.checkCalendarEvent(), 30 * 1000);
   }
   _throttle(func, limit) {
     let inThrottle;
@@ -689,10 +741,10 @@ class ConfigManager {
       Object.entries(this.config.widgets).forEach(([widgetId, widget]) => {
         const widgetElement = document.getElementById(widgetId);
         if (widgetElement && widget.position && widget.size) {
-          widgetElement.style.width = `${widget.size.w}px`;
-          widgetElement.style.height = `${widget.size.h}px`;
           widgetElement.style.left = `${widget.position.x}px`;
           widgetElement.style.top = `${widget.position.y}px`;
+          widgetElement.style.width = `${widget.size.w}px`;
+          widgetElement.style.height = `${widget.size.h}px`;
           const baseWidth = 250;
           const baseHeight = 150;
           const baseFontSize = 16;
@@ -742,6 +794,7 @@ class ConfigManager {
       }
     });
     this.setupCameraGrid(this.config.cameraGrid.numCameras || 1);
+    document.documentElement.style.setProperty('--calendar-font-size', `${this.config.calendarFontSize}em`);
   }
   exportConfig() {
     const widgets = document.querySelectorAll('.widget');
@@ -776,7 +829,8 @@ class ConfigManager {
       widgets: this.config.widgets,
       sensors: this.config.sensors,
       appearance: this.config.appearance,
-      cameraGrid: this.config.cameraGrid
+      cameraGrid: this.config.cameraGrid,
+      calendarFontSize: this.config.calendarFontSize
     };
     const configBlob = new Blob([JSON.stringify(exportConfig, null, 2)], {
       type: 'application/json'
@@ -863,7 +917,9 @@ class ConfigManager {
         columns: 1,
         rows: 1,
         numCameras: 1
-      }
+      },
+      calendarEvents: {},
+      calendarFontSize: 5
     };
     this.applyConfig();
   }
@@ -904,11 +960,28 @@ class ConfigManager {
       if (response.ok) {
         const loadedConfig = await response.json();
         this.config = Object.assign({}, this.config, loadedConfig);
+        delete this.config.calendarEvents;
       }
     } catch (error) {
       console.error('Error loading config:', error);
     }
     this.applyConfig();
+  }
+  async loadCalendarData() {
+    try {
+      const response = await fetch('calendar.json');
+      if (response.ok) {
+        const calendarData = await response.json();
+        this.config.calendarEvents = Object.keys(calendarData).reduce((acc, key) => {
+          const isoDate = key;
+          acc[isoDate] = calendarData[key];
+          return acc;
+        }, {});
+        this.checkCalendarEvent();
+      }
+    } catch (error) {
+      console.error('Error loading calendar data:', error);
+    }
   }
   setupWeatherWidget() {
     const cityInput = document.getElementById('cityInput');
@@ -930,10 +1003,10 @@ class ConfigManager {
             return;
           }
           const suggestions = data.results.map(city => `
-            <li data-lat="${city.latitude}" data-lon="${city.longitude}">
-              ${city.name}, ${city.country}
-            </li>
-          `).join('');
+                    <li data-lat="${city.latitude}" data-lon="${city.longitude}">
+                      ${city.name}, ${city.country}
+                    </li>
+                  `).join('');
           document.querySelector('.city-suggestions').innerHTML = suggestions;
         } catch (error) {
           console.error('Error searching cities:', error);
@@ -1062,17 +1135,17 @@ class ConfigManager {
     cameraSettingsDiv.innerHTML = '';
     this.config.cameras.forEach((camera, index) => {
       const cameraSettingHtml = `
-        <div class="setting-item">
-          <h4>Camera ${index + 1}</h4>
-          <label>Stream URL:</label>
-          <input type="text" class="camera-url" data-index="${index}" 
-            value="${camera.url || ''}" placeholder="rtmp://example.com/stream">
-          <label>Camera Name:</label>
-          <input type="text" class="camera-name" data-index="${index}" 
-            value="${camera.name || `Camera ${index + 1}`}" placeholder="Camera Name">
-          <button class="apply-button" onclick="configManager.applyCameraSettings(${index})">Apply</button>
-        </div>
-      `;
+                <div class="setting-item">
+                  <h4>Camera ${index + 1}</h4>
+                  <label>Stream URL:</label>
+                  <input type="text" class="camera-url" data-index="${index}"
+                    value="${camera.url || ''}" placeholder="rtmp://example.com/stream">
+                  <label>Camera Name:</label>
+                  <input type="text" class="camera-name" data-index="${index}"
+                    value="${camera.name || `Camera ${index + 1}`}" placeholder="Camera Name">
+                  <button class="apply-button" onclick="configManager.applyCameraSettings(${index})">Apply</button>
+                </div>
+              `;
       cameraSettingsDiv.insertAdjacentHTML('beforeend', cameraSettingHtml);
     });
     document.querySelectorAll('.camera-url').forEach(input => {
@@ -1114,21 +1187,8 @@ class ConfigManager {
         element.setAttribute('playsinline', '');
         element.setAttribute('preload', 'auto');
         if (camera.url.startsWith('rtsp://')) {
-          try {
-            const rtspConfig = {
-              socket: 'wss://yourWebSocketProxyUrl',
-              path: camera.url,
-              bufferDuration: 60,
-              videoBufferSize: 1024 * 1024 * 2,
-              audioBufferSize: 1024 * 1024,
-              useHardwareDecoder: true
-            };
-            const player = new Streamedian.WSPlayer(element, rtspConfig);
-            element._player = player;
-          } catch (error) {
-            console.error(`Error initializing camera ${i + 1}:`, error);
-            element.setAttribute('data-placeholder', `${camera.name || `Camera ${i + 1}`}\nError initializing feed`);
-          }
+          element.src = camera.url;
+          element.play();
         } else if (Hls.isSupported() && camera.url.endsWith('.m3u8')) {
           const hls = new Hls({
             debug: false,
@@ -1264,6 +1324,14 @@ class ConfigManager {
         this.updateAppearance();
       });
     }
+    const calendarFontSize = document.getElementById('calendarFontSize');
+    if (calendarFontSize) {
+      calendarFontSize.value = this.config.calendarFontSize;
+      calendarFontSize.addEventListener('input', e => {
+        this.config.calendarFontSize = parseFloat(e.target.value);
+        document.documentElement.style.setProperty('--calendar-font-size', `${e.target.value}em`);
+      });
+    }
     document.querySelectorAll('.widget-toggle').forEach(toggle => {
       const toggleInput = toggle.querySelector('input');
       const widgetName = toggle.querySelector('span').textContent.trim();
@@ -1334,6 +1402,34 @@ class ConfigManager {
       }
     });
     this.updateAppearance();
+    const calendarDateInput = document.getElementById('calendarDate');
+    const calendarMessageInput = document.getElementById('calendarMessage');
+    const saveCalendarEventButton = document.getElementById('saveCalendarEvent');
+    saveCalendarEventButton.addEventListener('click', () => {
+      const date = calendarDateInput.value;
+      const message = calendarMessageInput.value;
+      this.config.calendarEvents[date] = message;
+    });
+    const exportCalendarButton = document.getElementById('exportCalendar');
+    exportCalendarButton.addEventListener('click', () => {
+      const calendarEvents = this.config.calendarEvents;
+      const calendarBlob = new Blob([JSON.stringify(calendarEvents, null, 2)], {
+        type: 'application/json'
+      });
+      const downloadLink = document.createElement('a');
+      downloadLink.href = URL.createObjectURL(calendarBlob);
+      downloadLink.download = 'calendar.json';
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      URL.revokeObjectURL(downloadLink.href);
+    });
+    const testCalendarButton = document.getElementById('testCalendar');
+    testCalendarButton.addEventListener('click', () => {
+      this.calendarBanner.textContent = 'Test Message - This is a test scroll!';
+      this.calendarBanner.classList.add('visible');
+      this.calendarBanner.classList.add('sliding');
+    });
   }
   updateAppearance() {
     document.documentElement.style.setProperty('--widget-opacity', this.config.appearance.opacity);
@@ -1343,6 +1439,7 @@ class ConfigManager {
   setDashboardMode(dashboardMode) {
     const dashboard = document.querySelector('.dashboard');
     const settingsToggle = document.querySelector('.settings-toggle');
+    this.calendarBanner = this.calendarBanner || document.querySelector('.calendar-banner');
     if (dashboardMode === 0) {
       if (dashboard) dashboard.style.display = 'none';
       if (settingsToggle) settingsToggle.style.display = 'none';
@@ -1353,6 +1450,7 @@ class ConfigManager {
       if (cameraGrid) {
         cameraGrid.style.zIndex = '1';
       }
+      this.calendarBanner.classList.remove('visible');
     } else {
       if (dashboard) dashboard.style.display = 'block';
       if (settingsToggle) settingsToggle.style.display = 'block';
@@ -1367,17 +1465,34 @@ class ConfigManager {
       }
     }
   }
+  async checkCalendarEvent() {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const dashboardMode = urlParams.get('dashboard') ?? '1';
+      if (parseInt(dashboardMode) === 0) return;
+      const now = new Date();
+      const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const eventToday = this.config.calendarEvents[today];
+      if (eventToday) {
+        this.calendarBanner.classList.add('visible');
+        this.calendarBanner.style.width = 'auto'; 
+        this.calendarBanner.textContent = eventToday;
+        this.calendarBanner.classList.add('sliding');
+      } else {
+        this.calendarBanner.classList.remove('visible');
+        this.calendarBanner.classList.remove('sliding');
+      }
+    } catch (error) {
+      console.error('Error checking calendar:', error);
+    }
+  }
 }
 let configManager;
-document.addEventListener('keydown', e => {
-  if (e.key >= '0' && e.key <= '9') {
-    const urlParams = new URLSearchParams(window.location.search);
-    const dashboardMode = urlParams.get('dashboard') ?? '1';
-    window.location.href = `index.html?config=${e.key}&dashboard=${dashboardMode}`;
-  }
-});
 document.addEventListener('DOMContentLoaded', () => {
   configManager = new ConfigManager();
+  const urlParams = new URLSearchParams(window.location.search);
+  const dashboardMode = urlParams.get('dashboard') ?? '1';
+  configManager.setDashboardMode(parseInt(dashboardMode));
   function updateClock() {
     const now = new Date();
     document.querySelector('.clock').textContent = now.toLocaleTimeString('en-GB', {
@@ -1391,6 +1506,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   setInterval(updateClock, 1000);
   updateClock();
+  document.addEventListener('keydown', e => {
+    if (e.key >= '0' && e.key <= '9') {
+      const dashboardMode = urlParams.get('dashboard') ?? '1';
+      window.location.href = `index.html?config=${e.key}&dashboard=${dashboardMode}`;
+    }
+  });
 });</script>
 </head>
 <body>
@@ -1474,6 +1595,10 @@ document.addEventListener('DOMContentLoaded', () => {
       <label for="fontSize">Font Size:</label>
       <input type="range" id="fontSize" min="12" max="24" value="16">
     </div>
+    <div class="setting-item">
+      <label for="calendarFontSize">Calendar Font Size:</label>
+      <input type="range" id="calendarFontSize" min="0.5" max="5" step="0.1" value="5">
+    </div>
   </div>
 
   <div class="settings-section">
@@ -1496,7 +1621,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <input type="text" id="temp1Name" placeholder="Sensor Name">
       <label>Refresh Interval (seconds):</label>
       <input type="number" id="temp1Interval" min="1" value="30">
-      <button class="apply-button" onclick="configManager.applySensorSettings(&apos;temp1&apos;)">Apply</button>
+      <button class="apply-button" onclick="configManager.applySensorSettings('temp1')">Apply</button>
     </div>
     <div class="setting-item">
       <h4>Temperature Sensor 2</h4>
@@ -1506,7 +1631,20 @@ document.addEventListener('DOMContentLoaded', () => {
       <input type="text" id="temp2Name" placeholder="Sensor Name">
       <label>Refresh Interval (seconds):</label>
       <input type="number" id="temp2Interval" min="1" value="30">
-      <button class="apply-button" onclick="configManager.applySensorSettings(&apos;temp2&apos;)">Apply</button>
+      <button class="apply-button" onclick="configManager.applySensorSettings('temp2')">Apply</button>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <h3>Calendar Management</h3>
+    <div class="setting-item">
+      <label for="calendarDate">Date (YYYY-MM-DD):</label>
+      <input type="date" id="calendarDate">
+      <label for="calendarMessage">Message:</label>
+      <textarea id="calendarMessage"></textarea>
+      <button class="apply-button" id="saveCalendarEvent">Save Event</button>
+      <button class="apply-button" id="testCalendar">Test Calendar</button>
+      <button class="apply-button" id="exportCalendar">Export Calendar</button>
     </div>
   </div>
 
@@ -1564,10 +1702,13 @@ document.addEventListener('DOMContentLoaded', () => {
   <div class="settings-section">
     <h3>Configuration</h3>
     <button class="button" onclick="configManager.exportConfig()">Export Configuration</button>
-    <button class="button" onclick="document.getElementById(&apos;importConfig&apos;).click()">Import Configuration</button>
+    <button class="button" onclick="document.getElementById('importConfig').click()">Import Configuration</button>
     <input type="file" id="importConfig" style="display: none" accept=".json">
     <button class="button" onclick="configManager.resetConfig()">Reset to Defaults</button>
   </div>
 </div>
+
+<div class="calendar-banner"></div>
+
 </body>
 </html>
