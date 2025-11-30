@@ -1,0 +1,554 @@
+/**
+ * SHAD - Simple Home Assistant Dashboard
+ * Main Stylesheet
+ */
+
+/* ===== Font Imports ===== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap');
+
+/* ===== CSS Variables & Themes ===== */
+
+/* Dark Theme (Default) */
+:root {
+  --bg-color: #121212;
+  --text-color: #ffffff;
+  --widget-bg: rgba(30, 30, 30, var(--widget-opacity, 0.9));
+  --widget-border: 1px solid rgba(255, 255, 255, 0.15);
+  --accent-color: #00b4d8;
+  --widget-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  --text-secondary: rgba(255, 255, 255, 0.7);
+  --font-family: 'Inter', sans-serif;
+  --base-font-size: 16px;
+  --calendar-font-size: 5em;
+}
+
+/* Cats Theme */
+[data-theme="cats"] {
+  --bg-color: #3e1d5a;
+  --text-color: #fdfcff;
+  --widget-bg: rgba(62, 29, 90, var(--widget-opacity, 0.9));
+  --widget-border: 1px solid rgba(255, 255, 255, 0.1);
+  --accent-color: #ff9a8d;
+  --widget-shadow: 0 4px 12px rgba(255, 154, 141, 0.2);
+  --text-secondary: rgba(253, 252, 255, 0.7);
+  --font-family: 'Quicksand', sans-serif;
+}
+
+/* Space Theme */
+[data-theme="space"] {
+  --bg-color: #1a002b;
+  --text-color: #e0e0e0;
+  --widget-bg: rgba(26, 0, 43, var(--widget-opacity, 0.9));
+  --widget-border: 1px solid rgba(255, 255, 255, 0.1);
+  --accent-color: #7f5af0;
+  --widget-shadow: 0 4px 12px rgba(127, 90, 240, 0.2);
+  --text-secondary: rgba(224, 224, 224, 0.7);
+  --font-family: 'Space Grotesk', sans-serif;
+}
+
+/* ===== Base Styles ===== */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family);
+  background: var(--bg-color);
+  color: var(--text-color);
+  overflow: hidden;
+  font-size: var(--base-font-size);
+}
+
+/* ===== Dashboard Layout ===== */
+.dashboard {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+/* ===== Camera Grid ===== */
+.camera-grid {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 5px;
+}
+
+.camera-feed {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-color);
+  font-size: 1.2em;
+  text-align: center;
+  position: relative;
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+.camera-feed::before {
+  content: attr(data-placeholder);
+  position: absolute;
+  padding: 20px;
+  z-index: 1;
+}
+
+.camera-feed[autoplay] {
+  opacity: 1;
+  background: black;
+}
+
+/* Theme-specific camera styles */
+[data-theme="cats"] .camera-feed {
+  border: 2px solid #ff9a8d;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="space"] .camera-feed {
+  border: 2px solid #7f5af0;
+  background: rgba(0, 0, 0, 0.7);
+}
+
+/* ===== Widget Base Styles ===== */
+.widget,
+.widget * {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  cursor: default;
+}
+
+.widget {
+  position: absolute;
+  width: 250px;
+  height: 150px;
+  min-width: 100px;
+  min-height: 100px;
+  background: var(--widget-bg);
+  border: var(--widget-border);
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: var(--widget-shadow);
+  backdrop-filter: blur(var(--blur-amount));
+  cursor: move;
+  transition: transform 0.2s;
+  overflow: hidden;
+  max-width: calc(100vw - 40px);
+  max-height: calc(100vh - 40px);
+  box-sizing: border-box;
+  font-size: var(--base-font-size);
+}
+
+.widget:hover {
+  transform: scale(1.02);
+}
+
+.widget-content {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.widget input,
+.widget select {
+  cursor: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+/* ===== Clock Widget ===== */
+.clock {
+  font-size: 3em;
+  font-weight: bold;
+  text-align: center;
+}
+
+.date {
+  font-size: 1.2em;
+  margin-top: 10px;
+  color: var(--text-secondary);
+}
+
+/* ===== Weather Widget ===== */
+.weather-widget {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.weather-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 0.8em;
+}
+
+.weather-icon {
+  font-size: min(2em, 4vw);
+  line-height: 1;
+  margin: 5px 0;
+}
+
+.temperature {
+  font-size: min(1.8em, 3.6vw);
+  font-weight: bold;
+  line-height: 1;
+}
+
+.weather-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  width: 100%;
+  font-size: 0.75em;
+  margin: 2px 0;
+}
+
+.weather-details > div,
+.forecast-items > div {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px;
+  border-radius: 4px;
+  text-align: center;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.forecast {
+  width: 100%;
+}
+
+.forecast-title {
+  font-size: 0.8em;
+  opacity: 0.8;
+  margin-bottom: 2px;
+  color: var(--text-secondary);
+}
+
+.forecast-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+  gap: 2px;
+  width: 100%;
+}
+
+#cityInput {
+  width: calc(100% - 16px);
+  padding: 4px;
+  margin: 0;
+  border: none;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-color);
+}
+
+.city-suggestions {
+  position: absolute;
+  top: calc(30px);
+  left: 15px;
+  right: 15px;
+  max-height: 150px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  background: var(--widget-bg);
+  border-radius: 4px;
+  overflow-y: auto;
+  z-index: 10;
+}
+
+.city-suggestions li {
+  padding: 8px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.city-suggestions li:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.weather-widget input {
+  width: 100%;
+  padding: 4px;
+  margin-bottom: 5px;
+  border: none;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-color);
+}
+
+.last-update {
+  font-size: 0.7em;
+  color: var(--text-secondary);
+  margin: 2px 0;
+  text-align: center;
+}
+
+/* ===== Sensor Widget ===== */
+.sensor-name {
+  font-size: 1.2em;
+  margin-bottom: 5px;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+/* ===== Settings Panel ===== */
+.settings-panel {
+  position: fixed;
+  right: -400px;
+  top: 0;
+  width: 400px;
+  height: 100%;
+  background: var(--widget-bg);
+  padding: 20px;
+  transition: right 0.3s;
+  z-index: 1000;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.2);
+  overflow-y: auto;
+  box-sizing: border-box;
+  color: var(--text-color);
+  border-left: var(--widget-border);
+}
+
+.settings-panel.active {
+  right: 0;
+}
+
+.setting-item {
+  margin-bottom: 15px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 5px;
+}
+
+.setting-item label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.setting-item input[type="text"],
+.setting-item input[type="number"],
+.setting-item select,
+.setting-item textarea,
+.setting-item input[type="date"] {
+  width: 100%;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  color: var(--text-color);
+  box-sizing: border-box;
+}
+
+.settings-section {
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ===== Buttons ===== */
+.apply-button,
+.button {
+  background: var(--accent-color);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.apply-button:hover,
+.button:hover {
+  opacity: 0.9;
+}
+
+.settings-toggle {
+  position: fixed;
+  right: 20px;
+  top: 20px;
+  z-index: 1001;
+  background: var(--widget-bg);
+  border: var(--widget-border);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  padding: 0;
+  transition: transform 0.2s;
+}
+
+.settings-toggle:hover {
+  transform: scale(1.1);
+}
+
+.config-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 15px;
+}
+
+.config-button {
+  background: var(--accent-color);
+  color: var(--text-color);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.config-button:hover {
+  opacity: 0.9;
+}
+
+/* ===== Toggle Switch ===== */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 20px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  background-color: #ccc;
+  border-radius: 34px;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  transition: 0.4s;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 2px;
+  bottom: 2px;
+  background-color: var(--text-color);
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background-color: var(--accent-color);
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+  transform: translateX(20px);
+}
+
+.widget-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+/* ===== Calendar Banner ===== */
+.calendar-banner {
+  position: fixed;
+  bottom: -1000px;
+  left: 0;
+  width: auto;
+  background: linear-gradient(to bottom, rgba(var(--accent-color-rgb, 0, 180, 216), 0.7), rgba(var(--accent-color-rgb, 0, 180, 216), 0.5));
+  color: var(--text-color);
+  padding: 10px 20px;
+  text-align: center;
+  font-size: var(--calendar-font-size);
+  z-index: 9999;
+  transition: bottom 0.5s ease-in-out;
+  overflow: visible;
+  text-transform: uppercase;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  white-space: nowrap;
+  word-break: keep-all;
+  font-family: var(--font-family);
+  font-weight: bold;
+  word-spacing: 0.2em;
+  border-radius: 10px;
+}
+
+.calendar-banner.visible {
+  bottom: 20px;
+}
+
+.calendar-banner.sliding {
+  animation: slideText 20s linear infinite;
+}
+
+@keyframes slideText {
+  0% { transform: translateX(100vw); }
+  100% { transform: translateX(-100%); }
+}
+
+/* ===== Responsive Styles ===== */
+@media (max-width: 768px) {
+  .settings-panel {
+    width: 100%;
+    right: -100%;
+  }
+
+  .settings-panel.active {
+    right: 0;
+  }
+
+  .dashboard {
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: 5px;
+    padding: 5px;
+  }
+
+  .widget {
+    max-width: calc(100vw - 20px);
+    max-height: calc(100vh - 20px);
+    padding: 10px;
+  }
+
+  .clock {
+    font-size: 2em;
+  }
+}
