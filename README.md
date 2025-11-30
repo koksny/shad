@@ -9,7 +9,7 @@ Essentially a weather station/clock with background camera feeds for any device 
 
 ## Version 1.1 - What's New
 
-### 🏗️ Major Architecture Refactor
+### Refactor
 - **Modular ES6 Architecture**: Complete rewrite from single monolithic HTML to a clean, modular JavaScript architecture with ES6 modules.
 - **Service-Based Design**: Separated concerns into dedicated services:
   - `ConfigManager.js` - Central configuration and state management
@@ -20,7 +20,7 @@ Essentially a weather station/clock with background camera feeds for any device 
   - `WidgetManager.js` - Widget positioning, resizing, and visibility
   - `helpers.js` - Utility functions (throttle, debounce, formatting)
 
-### 🎨 New Features
+### New Features
 - **Multiple Themes**: Choose between Dark, Cats, and Space themes with unique color schemes and fonts.
 - **Calendar Event Banner**: Display scrolling event messages for specific dates with sliding animation.
 - **HD Mode**: New `?dashboard=0` URL parameter for camera-only display on powerful devices.
@@ -28,7 +28,7 @@ Essentially a weather station/clock with background camera feeds for any device 
 - **Sequential Camera Loading**: Staggered initialization for kiosk mode to prevent overwhelming low-power devices.
 - **Page Visibility Handling**: All services pause when tab is hidden, resume on visibility (saves resources).
 
-### 🐛 Bug Fixes & Improvements
+### Bug Fixes & Improvements
 - **Memory Leak Prevention**: Proper cleanup of HLS instances, event listeners, and abort controllers.
 - **Camera Stream Stability**: Live sync positioning, cache-busting for manifests, and exponential backoff retries.
 - **Rate Limiting**: Weather API calls now rate-limited to prevent excessive requests.
@@ -37,7 +37,7 @@ Essentially a weather station/clock with background camera feeds for any device 
 - **Widget Boundary Enforcement**: Widgets stay within viewport bounds when dragging/resizing.
 - **Font Scaling**: Automatic font size adjustment based on widget dimensions.
 
-### 📁 New File Structure
+### New File Structure
 ```
 src/
 ├── index.html
