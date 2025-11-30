@@ -363,7 +363,6 @@ This returns the status of all services including:
 ## Credits
 
 - **Author**: [Koksny](https://github.com/koksny)
-- **Built With**: [Websim.ai](https://websim.ai) - Thanks to the Websim team for providing such a great development tool.
 - **Weather Data**: [Open-Meteo](https://open-meteo.com/) - Free weather API.
 - **Libraries**:
   - [HLS.js](https://github.com/video-dev/hls.js/) - HTTP Live Streaming in JavaScript.
