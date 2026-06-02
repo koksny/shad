@@ -39,6 +39,11 @@ export class WeatherService {
     this.SEARCH_DEBOUNCE_MS = 300;
     // Request timeout: 15 seconds
     this.REQUEST_TIMEOUT_MS = 15000;
+    // Retry delay after a failed fetch: 60 seconds, so a transient or
+    // boot-time failure self-heals instead of getting stuck on the error.
+    this.RETRY_DELAY_MS = 60 * 1000;
+    // Pending one-shot retry timer
+    this.retryTimeout = null;
     
     // Setup visibility handling
     this.visibilityHandler = this.handleVisibilityChange.bind(this);
@@ -64,6 +69,7 @@ export class WeatherService {
   pause() {
     this.isPaused = true;
     this.stopAutoUpdate();
+    this.clearRetry();
     // Abort any in-flight requests
     this.abortRequests();
     console.log('[WeatherService] Paused (page hidden)');
@@ -309,6 +315,30 @@ export class WeatherService {
   }
 
   /**
+   * Schedule a short one-shot retry after a failed fetch, so a transient or
+   * boot-time failure self-heals instead of getting stuck on the error state.
+   */
+  scheduleRetry() {
+    if (this.isDestroyed || this.isPaused) return;
+    if (!this.currentLat || !this.currentLon) return;
+    if (this.retryTimeout) return; // a retry is already pending
+    this.retryTimeout = setTimeout(() => {
+      this.retryTimeout = null;
+      this.updateWeather();
+    }, this.RETRY_DELAY_MS);
+  }
+
+  /**
+   * Cancel a pending failure-retry timer
+   */
+  clearRetry() {
+    if (this.retryTimeout) {
+      clearTimeout(this.retryTimeout);
+      this.retryTimeout = null;
+    }
+  }
+
+  /**
    * Update weather data from API
    */
   async updateWeather() {
@@ -362,7 +392,8 @@ export class WeatherService {
       this.lastFetchTime = Date.now();
       this.renderWeather(data);
 
-      // Restart auto-update timer on successful fetch
+      // Success: cancel any pending failure-retry, restart normal timer
+      this.clearRetry();
       this.startAutoUpdate();
     } catch (error) {
       clearTimeout(timeoutId);
@@ -372,6 +403,12 @@ export class WeatherService {
       
       console.error('[WeatherService] Error updating weather:', error);
       this.renderError();
+
+      // Resilience: a failed fetch must NOT leave weather permanently broken.
+      // Schedule a short retry so it recovers on its own (e.g. if the network
+      // was not ready yet at boot). Without this, the very first failed fetch
+      // would stay stuck on the error state until a full page reload.
+      this.scheduleRetry();
     } finally {
       this.isFetching = false;
       this.weatherAbortController = null;
@@ -458,6 +495,7 @@ export class WeatherService {
     
     // Stop auto-update
     this.stopAutoUpdate();
+    this.clearRetry();
     clearTimeout(this.searchTimeout);
     
     // Remove event listeners

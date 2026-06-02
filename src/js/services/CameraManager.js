@@ -52,7 +52,7 @@ export class CameraManager {
     this.hlsConfig = {
       debug: false,
       enableWorker: true,
-      lowLatencyMode: true,              // Enable for live feeds
+      lowLatencyMode: false,              // LL-HLS is CPU-heavy on a Pi and can trip the stall detector
       backBufferLength: 0,               // Don't keep back buffer (live only)
       maxBufferLength: 10,               // Reduced - live doesn't need much buffer
       maxMaxBufferLength: 15,
@@ -87,6 +87,11 @@ export class CameraManager {
     this.maxRetryDelay = 120000;  // 2 minutes max
     this.baseRetryDelay = 3000;   // 3 seconds base
     this.maxRetryAttempts = 10;   // Max retries before long pause
+
+    // Health-monitor recovery throttle (prevents a permanently-down camera from
+    // being reinitialized every ~10s forever, which leaks HLS instances -> OOM).
+    this.RECOVERY_COOLDOWN_MS = 20000;  // Min gap between recoveries of one camera
+    this.MAX_FAST_RECOVERIES = 3;       // Then fall back to slow backoff retry
     
     // Set up page visibility handling
     this.setupVisibilityHandling();
@@ -246,14 +251,33 @@ export class CameraManager {
   recoverCamera(index, camera) {
     const cameraData = this.cameras.get(index);
     if (!cameraData || cameraData.isDestroyed) return;
+
+    // Throttle health-monitor recovery so a down camera can't be torn down and
+    // rebuilt every ~10s forever (that leaks HLS workers/buffers until the Pi
+    // runs out of memory). Enforce a cooldown, and after a few fast recoveries
+    // hand off to the slow exponential-backoff retry instead of hammering.
+    const nowR = Date.now();
+    if (cameraData.lastRecoveryTime && nowR - cameraData.lastRecoveryTime < this.RECOVERY_COOLDOWN_MS) {
+      return;
+    }
+    cameraData.lastRecoveryTime = nowR;
+    cameraData.recoveryCount = (cameraData.recoveryCount || 0) + 1;
+    if (cameraData.recoveryCount > this.MAX_FAST_RECOVERIES) {
+      console.warn(`[CameraManager] Camera ${index + 1} keeps failing - backing off to slow retry`);
+      this.cleanupHls(cameraData);
+      if (cameraData.element) {
+        try { cameraData.element.pause(); cameraData.element.removeAttribute('src'); cameraData.element.load(); } catch (e) { /* ignore */ }
+      }
+      this.scheduleRetry(index, camera);
+      return;
+    }
     
     console.log(`[CameraManager] Recovering camera ${index + 1} - full reset`);
     
-    // Reset stall tracking
+    // Reset stall tracking (NOT retryCount - keep the backoff escalating)
     cameraData.stallCount = 0;
     cameraData.lastPlaybackTime = 0;
     cameraData.lastCheckTime = 0;
-    cameraData.retryCount = 0;
     
     // Full cleanup of HLS
     this.cleanupHls(cameraData);
@@ -551,6 +575,8 @@ export class CameraManager {
       lastPlaybackTime: 0,
       lastCheckTime: 0,
       stallCount: 0,
+      recoveryCount: 0,
+      lastRecoveryTime: 0,
     };
     
     this.cameras.set(index, cameraData);
@@ -579,8 +605,9 @@ export class CameraManager {
     
     const onPlaying = () => {
       if (cameraData.isDestroyed) return;
-      // Reset stall tracking when playback resumes
+      // Reset stall + recovery tracking when playback resumes
       cameraData.stallCount = 0;
+      cameraData.recoveryCount = 0;
       cameraData.lastPlaybackTime = element.currentTime;
       cameraData.lastCheckTime = Date.now();
     };
